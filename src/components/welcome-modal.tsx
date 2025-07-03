@@ -30,13 +30,7 @@ export default function WelcomeModal({ trigger }: WelcomeModalProps) {
       className="h-auto w-auto cursor-pointer rounded-2xl bg-white/30 p-3 shadow-lg backdrop-blur-lg hover:bg-white/60 focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
       onClick={() => setIsOpen(true)}
     >
-      <Image
-        src="/logo-toukoum.svg"
-        width={100}
-        height={100}
-        alt="Logo"
-        className="w-6 md:w-8"
-      />
+      {/* <img alt="Logo" loading="lazy" width="100" height="100" decoding="async" data-nimg="1" className="w-6 md:w-8" src="/logo-toukoum.svg" style={{}} /> */}
       <span className="sr-only">About Toukoum</span>
     </Button>
   );

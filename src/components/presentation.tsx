@@ -7,13 +7,13 @@ import React from 'react';
 export function Presentation() {
   // Personal information
   const profile = {
-    name: 'Raphael Giraud',
-    age: '21 years old',
-    location: 'Paris, France',
+    name: 'Finley Howard',
+    age: '24 years old',
+    location: 'Manchester, UK',
     // Add a newline character after the emoji
     description:
-      "Hey 👋\nI'm Raph also known as Toukoum. I'm a developer specializing in AI at 42 Paris. I'm working at LightOn AI in Paris. I'm passionate about AI, tech, Entrepreneurship and SaaS tech.",
-    src: '/profil-raph.png',
+      "Hey 👋\nI'm Finley, a 24-year-old automation and AI specialist based in Manchester, UK. I build intelligent systems, automate workflows, and create cool content. My style? Vibe coding, creative problem-solving, and always pushing the boundaries of what's possible.",
+    src: '/finley-howard.jpg',
     fallbackSrc:
       'https://images.unsplash.com/photo-1610216705422-caa3fcb6d158?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3',
   };
@@ -24,7 +24,7 @@ export function Presentation() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
+      transition: { duration: 0.6 },
     },
   };
 
@@ -36,7 +36,6 @@ export function Presentation() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: 'easeOut',
         delay: 0.2,
       },
     },
@@ -50,7 +49,8 @@ export function Presentation() {
           <div className="relative h-full w-full overflow-hidden rounded-2xl">
             <motion.div
               initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
               className="h-full w-full"
             >
@@ -74,7 +74,8 @@ export function Presentation() {
         <div className="flex flex-col space-y">
           <motion.div
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true }}
             variants={textVariants}
           >
             <h1 className="from-foreground to-muted-foreground bg-gradient-to-r bg-clip-text text-xl font-semibold text-transparent md:text-3xl">
@@ -89,7 +90,8 @@ export function Presentation() {
 
           <motion.p
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true }}
             variants={paragraphAnimation}
             className="text-foreground mt-6 leading-relaxed whitespace-pre-line"
           >
@@ -99,11 +101,12 @@ export function Presentation() {
           {/* Tags/Keywords */}
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.6, duration: 0.5 }}
             className="mt-4 flex flex-wrap gap-2"
           >
-            {['AI', 'Developer', '42 Paris', 'Sport', 'SaaS Builder'].map(
+            {['AI', 'SaaS', 'Vibe Coding', 'Automation'].map(
               (tag) => (
                 <span
                   key={tag}

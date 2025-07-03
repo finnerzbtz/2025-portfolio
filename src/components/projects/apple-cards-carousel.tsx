@@ -15,12 +15,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 type Card = {
   src: string;
   title: string;
   category: string;
   content: React.ReactNode;
+  isVideo?: boolean;
 };
 
 export const CarouselContext = createContext<{
@@ -139,8 +141,7 @@ export const Carousel = ({
                   transition: {
                     duration: 0.5,
                     delay: 0.2 * index,
-                    ease: 'easeOut',
-                    once: true,
+                      ease: [0.25, 0.1, 0.25, 1],
                   },
                 }}
                 key={'card' + index}
@@ -182,8 +183,13 @@ export const Card = ({
   layout?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { onCardClose, currentIndex } = useContext(CarouselContext);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -216,9 +222,9 @@ export const Card = ({
 
   return (
     <>
+      {mounted && open && createPortal(
       <AnimatePresence>
-        {open && (
-          <div className="fixed inset-0 z-52 h-screen overflow-auto">
+          <div className="fixed inset-0 z-[9999] h-screen overflow-auto">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -231,10 +237,10 @@ export const Card = ({
               exit={{ opacity: 0 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className="relative z-[60] mx-auto my-10 h-fit max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900"
+              className="relative z-[10000] mx-auto my-10 h-fit max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900"
             >
               {/* Sticky close button */}
-              <div className="sticky top-4 z-52 flex justify-end px-8 pt-8 md:px-14 md:pt-8">
+              <div className="sticky top-4 z-[10001] flex justify-end px-8 pt-8 md:px-14 md:pt-8">
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-black/90 shadow-md dark:bg-white/90"
                   onClick={handleClose}
@@ -265,8 +271,9 @@ export const Card = ({
               <div className="px-8 pt-8 pb-14 md:px-14">{card.content}</div>
             </motion.div>
           </div>
+        </AnimatePresence>,
+        document.body
         )}
-      </AnimatePresence>
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
@@ -288,12 +295,19 @@ export const Card = ({
             {card.title}
           </motion.p>
         </div>
-        <BlurImage
-          src={card.src}
-          alt={card.title}
-          fill
-          className="absolute inset-0 z-10 object-cover"
-        />
+        {card.isVideo ? (
+          <VideoComponent
+            src={card.src}
+            className="absolute inset-0 z-10 h-full w-full"
+          />
+        ) : (
+          <BlurImage
+            src={card.src}
+            alt={card.title}
+            fill
+            className="absolute inset-0 z-10 object-cover"
+          />
+        )}
       </motion.button>
     </>
   );
@@ -312,7 +326,9 @@ export const BlurImage = ({
     <Image
       className={cn(
         'transition duration-300',
-        isLoading ? 'blur-sm' : 'blur-0',
+        isLoading
+          ? 'blur-sm scale-110'
+          : 'blur-0 scale-100',
         className
       )}
       onLoad={() => setLoading(false)}
@@ -323,6 +339,39 @@ export const BlurImage = ({
       decoding="async"
       blurDataURL={typeof src === 'string' ? src : undefined}
       alt={alt ? alt : 'Background of a beautiful view'}
+      {...rest}
+    />
+  );
+};
+
+// New component for video rendering
+export const VideoComponent = ({
+  src,
+  className,
+  alt,
+  ...rest
+}: {
+  src: string;
+  className?: string;
+  alt?: string;
+} & React.VideoHTMLAttributes<HTMLVideoElement>) => {
+  const [isLoading, setLoading] = useState(true);
+  
+  return (
+    <video
+      className={cn(
+        'transition duration-300 object-cover',
+        isLoading
+          ? 'blur-sm scale-110'
+          : 'blur-0 scale-100',
+        className
+      )}
+      onLoadedData={() => setLoading(false)}
+      src={src}
+      autoPlay
+      muted
+      loop
+      playsInline
       {...rest}
     />
   );

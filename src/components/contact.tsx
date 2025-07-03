@@ -2,38 +2,39 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Linkedin, Youtube, Instagram, Github, BookOpen } from 'lucide-react';
 
 export function Contact() {
   // Contact information
   const contactInfo = {
-    name: 'Raphael Giraud',
-    email: 'raphaelgiraud12@gmail.com',
-    handle: '@Raphael.Giraud',
+    name: 'Finley Howard',
+    email: 'fin.howard03@gmail.com',
+    handle: '@finnerz',
     socials: [
       {
         name: 'LinkedIn',
-        url: 'https://www.linkedin.com/in/raphael-giraud-60939519a/',
+        url: 'https://www.linkedin.com/in/finn-howard-151ab8ab/',
+        icon: Linkedin,
       },
       {
         name: 'Youtube',
-        url: 'https://www.youtube.com/@toukoum',
+        url: 'https://www.youtube.com/@AISMRDailyVideos/shorts',
+        icon: Youtube,
       },
       {
         name: 'Instagram',
-        url: 'https://www.instagram.com/raphael.giraud/',
-      },
-      {
-        name: 'Discord',
-        url: 'https://discord.com/users/toukoum',
+        url: 'https://www.instagram.com/fieves.uk/',
+        icon: Instagram,
       },
       {
         name: 'Github',
-        url: 'https://github.com/toukoum',
+        url: 'https://github.com/finnerzbtz',
+        icon: Github,
       },
       {
-        name: 'X',
-        url: 'https://x.com/toukoumcode',
+        name: 'Substack',
+        url: 'https://substack.com/@finnerz1',
+        icon: BookOpen,
       },
     ],
   };
@@ -51,9 +52,6 @@ export function Contact() {
           <h2 className="text-foreground text-3xl font-semibold md:text-4xl">
             Contacts
           </h2>
-          <span className="mt-2 sm:mt-0">
-            {contactInfo.handle}
-          </span>
         </div>
 
         {/* Email Section */}
@@ -72,18 +70,24 @@ export function Contact() {
 
           {/* Social Links */}
           <div className="flex flex-wrap gap-x-6 gap-y-5 sm:gap-x-8">
-            {contactInfo.socials.map((social) => (
+            {contactInfo.socials.map((social) => {
+              const IconComponent = social.icon;
+              return (
               <button
                 key={social.name}
-                className="text-muted-foreground hover:text-foreground cursor-pointer text-sm transition-colors"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-2 cursor-pointer text-sm transition-colors"
                 onClick={() => openLink(social.url)}
                 title={social.name}
               >
+                  <IconComponent className="h-4 w-4" />
                 {social.name}
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
+
+
       </div>
     </div>
   );

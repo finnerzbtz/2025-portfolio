@@ -3,7 +3,7 @@ import { useChat } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // Component imports
@@ -17,24 +17,7 @@ import {
 } from '@/components/ui/chat/chat-bubble';
 import WelcomeModal from '@/components/welcome-modal';
 import { Info } from 'lucide-react';
-import GitHubButton from 'react-github-btn';
 import HelperBoost from './HelperBoost';
-
-// ClientOnly component for client-side rendering
-//@ts-ignore
-const ClientOnly = ({ children }) => {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return null;
-  }
-
-  return <>{children}</>;
-};
 
 // Define Avatar component props interface
 interface AvatarProps {
@@ -43,69 +26,37 @@ interface AvatarProps {
   isTalking: boolean;
 }
 
-// Dynamic import of Avatar component
-const Avatar = dynamic<AvatarProps>(
-  () =>
-    Promise.resolve(({ hasActiveTool, videoRef, isTalking }: AvatarProps) => {
-      // This function will only execute on the client
-      const isIOS = () => {
-        // Multiple detection methods
-        const userAgent = window.navigator.userAgent;
-        const platform = window.navigator.platform;
-        const maxTouchPoints = window.navigator.maxTouchPoints || 0;
+// Simple Avatar component to avoid hydration issues
+const Avatar = ({ hasActiveTool, videoRef, isTalking }: AvatarProps) => {
+  const [mounted, setMounted] = useState(false);
 
-        // UserAgent-based check
-        const isIOSByUA =
-          //@ts-ignore
-          /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-        // Platform-based check
-        const isIOSByPlatform = /iPad|iPhone|iPod/.test(platform);
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center rounded-full h-28 w-28">
+        <div className="h-full w-full scale-[1.8] bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+        </div>
+      </div>
+    );
+  }
 
-        // iPad Pro check
-        const isIPadOS =
-          //@ts-ignore
-          platform === 'MacIntel' && maxTouchPoints > 1 && !window.MSStream;
-
-        // Safari check
-        const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-
-        return isIOSByUA || isIOSByPlatform || isIPadOS || isSafari;
-      };
-
-      // Conditional rendering based on detection
       return (
         <div
-          className={`flex items-center justify-center rounded-full transition-all duration-300 ${hasActiveTool ? 'h-20 w-20' : 'h-28 w-28'}`}
+      className={`flex items-center justify-center rounded-full transition-all duration-200 ${hasActiveTool ? 'h-20 w-20' : 'h-28 w-28'}`}
         >
           <div
             className="relative cursor-pointer"
             onClick={() => (window.location.href = '/')}
           >
-            {isIOS() ? (
-              <img
-                src="/landing-memojis.png"
-                alt="iOS avatar"
-                className="h-full w-full scale-[1.8] object-contain"
-              />
-            ) : (
-              <video
-                ref={videoRef}
-                className="h-full w-full scale-[1.8] object-contain"
-                muted
-                playsInline
-                loop
-              >
-                <source src="/final_memojis.webm" type="video/webm" />
-                <source src="/final_memojis_ios.mp4" type="video/mp4" />
-              </video>
-            )}
+        <div className="h-full w-full scale-[1.8] bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+        </div>
           </div>
         </div>
       );
-    }),
-  { ssr: false }
-);
+};
 
 const MOTION_CONFIG = {
   initial: { opacity: 0, y: 20 },
@@ -113,7 +64,6 @@ const MOTION_CONFIG = {
   exit: { opacity: 0, y: 20 },
   transition: {
     duration: 0.3,
-    ease: 'easeOut',
   },
 };
 
@@ -124,6 +74,10 @@ const Chat = () => {
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
+  const [videoState, setVideoState] = useState<'playing' | 'paused' | 'loading'>('paused');
+  const [showContentVideo, setShowContentVideo] = useState(false);
+  const contentVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [showPresentationBackground, setShowPresentationBackground] = useState(false);
 
   const {
     messages,
@@ -142,48 +96,35 @@ const Chat = () => {
       if (response) {
         setLoadingSubmit(false);
         setIsTalking(true);
-        if (videoRef.current) {
-          videoRef.current.play().catch((error) => {
-            console.error('Failed to play video:', error);
-          });
-        }
       }
     },
     onFinish: () => {
       setLoadingSubmit(false);
       setIsTalking(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
     },
     onError: (error) => {
       setLoadingSubmit(false);
       setIsTalking(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-      console.error('Chat error:', error.message, error.cause);
       toast.error(`Error: ${error.message}`);
     },
     onToolCall: (tool) => {
       const toolName = tool.toolCall.toolName;
-      console.log('Tool call:', toolName);
     },
   });
 
+  // Separate the message calculation from side effects
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
-    const latestAIMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'assistant'
-    );
-    const latestUserMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'user'
-    );
+    // Use reverse() and find() instead of findLastIndex which may not exist
+    const reverseMessages = [...messages].reverse();
+    const latestAIMessage = reverseMessages.find((m) => m.role === 'assistant');
+    const latestUserMessage = reverseMessages.find((m) => m.role === 'user');
+    
+    const latestAIMessageIndex = latestAIMessage ? messages.indexOf(latestAIMessage) : -1;
+    const latestUserMessageIndex = latestUserMessage ? messages.indexOf(latestUserMessage) : -1;
 
     const result = {
-      currentAIMessage:
-        latestAIMessageIndex !== -1 ? messages[latestAIMessageIndex] : null,
-      latestUserMessage:
-        latestUserMessageIndex !== -1 ? messages[latestUserMessageIndex] : null,
+      currentAIMessage: latestAIMessage || null,
+      latestUserMessage: latestUserMessage || null,
       hasActiveTool: false,
     };
 
@@ -203,52 +144,115 @@ const Chat = () => {
     return result;
   }, [messages]);
 
+  // Handle video and background state separately with useEffect to prevent feedback loops
+  useEffect(() => {
+    const hasContentTool = currentAIMessage?.parts?.some(
+      (part) =>
+        part.type === 'tool-invocation' &&
+        part.toolInvocation?.state === 'result' &&
+        part.toolInvocation?.toolName === 'getContent'
+    ) || false;
+
+    if (hasContentTool !== showContentVideo) {
+      setShowContentVideo(hasContentTool);
+    }
+  }, [currentAIMessage?.parts, showContentVideo]);
+
+  useEffect(() => {
+    const hasPresentationTool = currentAIMessage?.parts?.some(
+      (part) =>
+        part.type === 'tool-invocation' &&
+        part.toolInvocation?.state === 'result' &&
+        part.toolInvocation?.toolName === 'getPresentation'
+    ) || false;
+
+    if (hasPresentationTool !== showPresentationBackground) {
+      setShowPresentationBackground(hasPresentationTool);
+    }
+  }, [currentAIMessage?.parts, showPresentationBackground]);
+
   const isToolInProgress = messages.some(
     (m) =>
       m.role === 'assistant' &&
       m.parts?.some(
         (part) =>
           part.type === 'tool-invocation' &&
-          part.toolInvocation?.state !== 'result'
+          part.toolInvocation?.state === 'partial-call'
       )
   );
 
-  //@ts-ignore
-  const submitQuery = (query) => {
-    if (!query.trim() || isToolInProgress) return;
+  const submitQuery = useCallback((query: string) => {
+    if (!query.trim() || isToolInProgress) {
+      return;
+    }
+
     setLoadingSubmit(true);
+    setIsTalking(false);
     append({
       role: 'user',
       content: query,
     });
-  };
+  }, [append, isToolInProgress]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.loop = true;
-      videoRef.current.muted = true;
-      videoRef.current.playsInline = true;
-      videoRef.current.pause();
+  // Optimized video control function
+  const controlVideo = useCallback((shouldPlay: boolean) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (shouldPlay && video.paused) {
+        video.play();
+        setVideoState('playing');
+      } else if (!shouldPlay && !video.paused) {
+        video.pause();
+        setVideoState('paused');
+      }
+    } catch (error) {
+      // Silently handle video control errors
     }
+  }, []);
 
-    if (initialQuery && !autoSubmitted) {
-      setAutoSubmitted(true);
-      setInput('');
-      submitQuery(initialQuery);
-    }
-  }, [initialQuery, autoSubmitted]);
-
+  // Control content video
   useEffect(() => {
-    if (videoRef.current) {
-      if (isTalking) {
-        videoRef.current.play().catch((error) => {
-          console.error('Failed to play video:', error);
-        });
-      } else {
-        videoRef.current.pause();
+    const video = contentVideoRef.current;
+    if (!video) return;
+
+    if (showContentVideo) {
+      try {
+        video.currentTime = 0;
+        video.play();
+      } catch (error) {
+        // Silently handle errors
       }
     }
-  }, [isTalking]);
+  }, [showContentVideo]);
+
+  // Video setup effect - only runs once
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = true;
+    video.playsInline = true;
+    video.loop = true;
+  }, []);
+
+  // Auto-submit initial query
+  useEffect(() => {
+    if (initialQuery && !autoSubmitted) {
+      submitQuery(initialQuery);
+      setAutoSubmitted(true);
+    }
+  }, [initialQuery, autoSubmitted, submitQuery]);
+
+  // Debounced video control based on talking state
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      controlVideo(isTalking);
+    }, 100); // Small delay to prevent rapid state changes
+
+    return () => clearTimeout(timeoutId);
+  }, [isTalking, controlVideo]);
 
   //@ts-ignore
   const onSubmit = (e) => {
@@ -262,9 +266,6 @@ const Chat = () => {
     stop();
     setLoadingSubmit(false);
     setIsTalking(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
   };
 
   // Check if this is the initial empty state (no messages)
@@ -276,55 +277,77 @@ const Chat = () => {
 
   return (
     <div className="relative h-screen overflow-hidden">
-      <div className="absolute top-6 right-8 z-51 flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
+      {/* Background Content Video */}
+      {showContentVideo && (
+        <div className="fixed inset-0 z-0">
+          <video
+            ref={contentVideoRef}
+            className="w-full h-full object-cover"
+            style={{
+              filter: 'blur(8px) brightness(0.3)',
+              transform: 'scale(1.1)', // Slight scale to hide blur edges
+            }}
+            onEnded={() => setShowContentVideo(false)}
+          >
+            <source src="/Barz in Carz - Eva Lazarus.mp4" type="video/mp4" />
+          </video>
+          {/* Overlay to ensure content is readable */}
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+      )}
+
+      {/* Background Presentation Image */}
+      {showPresentationBackground && (
+        <div className="fixed inset-0 z-0">
+          <div
+            className="w-full h-full bg-cover bg-center"
+            style={{
+              backgroundImage: 'url(/finley-howard.jpg)',
+              filter: 'blur(12px) brightness(0.4) saturate(1.2)',
+              transform: 'scale(1.1)', // Slight scale to hide blur edges
+            }}
+          />
+          {/* Overlay to ensure content is readable */}
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+      )}
+
+      {/* All chat interface elements with higher z-index */}
+      <div className="relative z-10 h-full">
+        <div className="absolute top-6 right-8 z-20 flex flex-col-reverse items-center justify-center gap-1 md:flex-row">
         <WelcomeModal
           trigger={
-            <div className="hover:bg-accent cursor-pointer rounded-2xl px-3 py-1.5">
+              <div className="hover:bg-accent/50 cursor-pointer rounded-2xl px-3 py-1.5 backdrop-blur-sm transition-all duration-200 ease-in-out hover:shadow-sm">
               <Info className="text-accent-foreground h-8" />
             </div>
           }
         />
-        <div className="pt-2">
-          <GitHubButton
-            href="https://github.com/toukoum/portfolio"
-            data-color-scheme="no-preference: light; light: light; dark: light_high_contrast;"
-            data-size="large"
-            data-show-count="true"
-            aria-label="Star toukoum/portfolio on GitHub"
-          >
-            Star
-          </GitHubButton>
-        </div>
+
       </div>
 
       {/* Fixed Avatar Header with Gradient */}
       <div
-        className="fixed top-0 right-0 left-0 z-50"
+          className="fixed top-0 right-0 left-0 z-15"
         style={{
-          background:
-            'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%)',
+            background: showContentVideo || showPresentationBackground
+              ? 'linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 30%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%)'
+              : 'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%)',
         }}
       >
         <div
           className={`transition-all duration-300 ease-in-out ${hasActiveTool ? 'pt-6 pb-0' : 'py-6'}`}
         >
           <div className="flex justify-center">
-            <ClientOnly>
               <Avatar
                 hasActiveTool={hasActiveTool}
                 videoRef={videoRef}
                 isTalking={isTalking}
               />
-            </ClientOnly>
           </div>
 
-          <AnimatePresence>
             {latestUserMessage && !currentAIMessage && (
-              <motion.div
-                {...MOTION_CONFIG}
-                className="mx-auto flex max-w-3xl px-4"
-              >
-                <ChatBubble variant="sent">
+              <div className="mx-auto flex max-w-3xl px-4">
+                <ChatBubble variant="sent" className={`${showPresentationBackground ? 'bg-white/85 backdrop-blur-xl rounded-2xl shadow-sm border border-white/20' : ''}`}>
                   <ChatBubbleMessage>
                     <ChatMessageContent
                       message={latestUserMessage}
@@ -334,28 +357,30 @@ const Chat = () => {
                     />
                   </ChatBubbleMessage>
                 </ChatBubble>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="container mx-auto flex h-full max-w-3xl flex-col">
+        <div className="container mx-auto flex h-full max-w-3xl flex-col relative z-10">
         {/* Scrollable Chat Content */}
         <div
-          className="flex-1 overflow-y-auto px-2"
-          style={{ paddingTop: `${headerHeight}px` }}
+          className="flex-1 overflow-y-auto px-2 hide-scrollbar"
+          style={{ 
+            paddingTop: `${headerHeight}px`,
+            paddingBottom: '100px',
+            marginBottom: '-60px',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.3) 90%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.3) 90%, transparent 100%)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
         >
-          <AnimatePresence mode="wait">
             {isEmptyState ? (
-              <motion.div
-                key="landing"
-                className="flex min-h-full items-center justify-center"
-                {...MOTION_CONFIG}
-              >
-                <ChatLanding submitQuery={submitQuery} />
-              </motion.div>
+              <div className="flex min-h-full items-center justify-center">
+                <ChatLanding submitQuery={submitQuery} showPresentationBackground={showPresentationBackground} />
+              </div>
             ) : currentAIMessage ? (
               <div className="pb-4">
                 <SimplifiedChatView
@@ -363,26 +388,22 @@ const Chat = () => {
                   isLoading={isLoading}
                   reload={reload}
                   addToolResult={addToolResult}
+                  showPresentationBackground={showPresentationBackground}
                 />
               </div>
             ) : (
               loadingSubmit && (
-                <motion.div
-                  key="loading"
-                  {...MOTION_CONFIG}
-                  className="px-4 pt-18"
-                >
-                  <ChatBubble variant="received">
+                <div className="px-4 pt-18">
+                  <ChatBubble variant="received" className={`${showPresentationBackground ? 'bg-white/85 backdrop-blur-xl rounded-2xl shadow-sm border border-white/20' : ''}`}>
                     <ChatBubbleMessage isLoading />
                   </ChatBubble>
-                </motion.div>
+                </div>
               )
             )}
-          </AnimatePresence>
         </div>
 
         {/* Fixed Bottom Bar */}
-        <div className="sticky bottom-0 bg-white px-2 pt-3 md:px-0 md:pb-4">
+        <div className="sticky bottom-0 px-2 pt-3 md:px-0 md:pb-4 z-15">
           <div className="relative flex flex-col items-center gap-3">
             <HelperBoost submitQuery={submitQuery} setInput={setInput} />
             <ChatBottombar
@@ -395,14 +416,16 @@ const Chat = () => {
             />
           </div>
         </div>
+          
         <a
           href="https://x.com/toukoumcode"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed right-3 bottom-0 z-10 mb-4 hidden cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm hover:underline md:block"
+            className="fixed right-3 bottom-0 z-20 mb-4 hidden cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm hover:underline md:block"
         >
           @toukoum
         </a>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 // src/components/chat/tool-renderer.tsx
+import React, { memo } from 'react';
 import { Contact } from '../contact';
 import Crazy from '../crazy';
 import InternshipCard from '../InternshipCard';
@@ -7,13 +8,15 @@ import AllProjects from '../projects/AllProjects';
 import Resume from '../resume';
 import Skills from '../skills';
 import Sports from '../sport';
+import Automation from '../automation';
+import Content from '../content';
 
 interface ToolRendererProps {
   toolInvocations: any[];
   messageId: string;
 }
 
-export default function ToolRenderer({
+const ToolRenderer = memo(function ToolRenderer({
   toolInvocations,
   messageId,
 }: ToolRendererProps) {
@@ -62,6 +65,20 @@ export default function ToolRenderer({
             return (
               <div key={toolCallId} className="w-full rounded-lg">
                 <Skills />
+              </div>
+            );
+
+          case 'getAutomation':
+            return (
+              <div key={toolCallId} className="w-full rounded-lg">
+                <Automation />
+              </div>
+            );
+
+          case 'getContent':
+            return (
+              <div key={toolCallId} className="w-full rounded-lg">
+                <Content />
               </div>
             );
 
@@ -114,4 +131,24 @@ export default function ToolRenderer({
       })}
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Only re-render if the tool invocations actually changed
+  if (prevProps.toolInvocations.length !== nextProps.toolInvocations.length) {
+    return false;
+  }
+  
+  // Check if any tool invocation changed
+  for (let i = 0; i < prevProps.toolInvocations.length; i++) {
+    const prevTool = prevProps.toolInvocations[i];
+    const nextTool = nextProps.toolInvocations[i];
+    
+    if (prevTool?.toolCallId !== nextTool?.toolCallId || 
+        prevTool?.toolName !== nextTool?.toolName) {
+      return false;
+    }
+  }
+  
+  return prevProps.messageId === nextProps.messageId;
+});
+
+export default ToolRenderer;

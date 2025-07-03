@@ -905,7 +905,7 @@ const useFluidCursor = () => {
 
   function update() {
     const dt = calcDeltaTime();
-    // console.log(dt)
+
     if (resizeCanvas()) initFramebuffers();
     updateColors(dt);
     applyInputs();

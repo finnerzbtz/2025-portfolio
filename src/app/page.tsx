@@ -1,84 +1,94 @@
 'use client';
 
+import React from 'react';
 import FluidCursor from '@/components/FluidCursor';
 import { Button } from '@/components/ui/button';
 import WelcomeModal from '@/components/welcome-modal';
+import { TypeWriter } from '@/components/ui/typewriter';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BriefcaseBusiness,
   Laugh,
   Layers,
-  PartyPopper,
   UserRoundSearch,
+  Zap,
+  Video,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import GitHubButton from 'react-github-btn';
+
 
 /* ---------- quick-question data ---------- */
 const questions = {
-  Me: 'Who are you? I want to know more about you.',
-  Projects: 'What are your projects? What are you working on right now?',
-  Skills: 'What are your skills? Give me a list of your soft and hard skills.',
-  Fun: 'What’s the craziest thing you’ve ever done? What are your hobbies?',
-  Contact:
-    'How can I contact you?',
+  Me: 'Who are you? Tell me about your background and experience.',
+  Projects: 'What are your current projects? Show me your automation and AI work.',
+  Skills: 'What are your technical skills? Tell me about n8n, AI, and development.',
+  Automation: 'What automation systems have you built? Show me your n8n workflows.',
+  Content: 'Tell me about your content creation work and viral videos.',
+  Contact: 'How can I contact you for collaboration or opportunities?',
 } as const;
 
 const questionConfig = [
   { key: 'Me', color: '#329696', icon: Laugh },
   { key: 'Projects', color: '#3E9858', icon: BriefcaseBusiness },
   { key: 'Skills', color: '#856ED9', icon: Layers },
-  { key: 'Fun', color: '#B95F9D', icon: PartyPopper },
+  { key: 'Automation', color: '#FF6B6B', icon: Zap },
+  { key: 'Content', color: '#B95F9D', icon: Video },
   { key: 'Contact', color: '#C19433', icon: UserRoundSearch },
 ] as const;
 
 /* ---------- component ---------- */
 export default function Home() {
   const [input, setInput] = useState('');
+  const [descriptionComplete, setDescriptionComplete] = useState(false);
+  const [placeholder, setPlaceholder] = useState('');
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const goToChat = (query: string) =>
     router.push(`/chat?query=${encodeURIComponent(query)}`);
 
-  /* hero animations (unchanged) */
+  /* hero animations - optimized for stability */
   const topElementVariants = {
-    hidden: { opacity: 0, y: -60 },
+    hidden: { opacity: 0, y: -20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: 'ease', duration: 0.8 },
+      transition: { duration: 0.6 },
     },
   };
   const bottomElementVariants = {
-    hidden: { opacity: 0, y: 80 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: 'ease', duration: 0.8, delay: 0.2 },
+      transition: { duration: 0.6, delay: 0.2 },
     },
   };
 
+  // Placeholder typing effect
   useEffect(() => {
-    // Précharger les assets du chat en arrière-plan
-    const img = new window.Image();
-    img.src = '/landing-memojis.png';
+    if (!descriptionComplete) return;
 
-    // Précharger les vidéos aussi
-    const linkWebm = document.createElement('link');
-    linkWebm.rel = 'preload'; // Note: prefetch au lieu de preload
-    linkWebm.as = 'video';
-    linkWebm.href = '/final_memojis.webm';
-    document.head.appendChild(linkWebm);
+    const placeholderText = "Ask me about automation, AI, or content creation…";
+    let currentIndex = 0;
+    
+    const timer = setInterval(() => {
+      if (currentIndex <= placeholderText.length) {
+        setPlaceholder(placeholderText.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 50);
 
-    const linkMp4 = document.createElement('link');
-    linkMp4.rel = 'prefetch';
-    linkMp4.as = 'video';
-    linkMp4.href = '/final_memojis_ios.mp4';
-    document.head.appendChild(linkMp4);
+    return () => clearInterval(timer);
+  }, [descriptionComplete]);
+
+  useEffect(() => {
+    // No longer preloading memoji or related videos
   }, []);
 
   return (
@@ -89,34 +99,23 @@ export default function Home() {
           className="hidden bg-gradient-to-b from-neutral-500/10 to-neutral-500/0 bg-clip-text text-[10rem] leading-none font-black text-transparent select-none sm:block lg:text-[16rem]"
           style={{ marginBottom: '-2.5rem' }}
         >
-          Toukoum
+          Finley
         </div>
       </div>
 
-      {/* GitHub button */}
-      <div className="absolute top-6 right-8 z-20">
-        <GitHubButton
-          href="https://github.com/toukoum/portfolio"
-          data-color-scheme="no-preference: light; light: light; dark: light_high_contrast;"
-          data-size="large"
-          data-show-count="true"
-          aria-label="Star toukoum/portfolio on GitHub"
-        >
-          Star
-        </GitHubButton>
-      </div>
+
 
       <div className="absolute top-6 left-6 z-20">
         <button
-          onClick={() => goToChat('Are you looking for an internship?')}
+          onClick={() => goToChat('Are you available for automation projects?')}
           className="cursor-pointer relative flex items-center gap-2 rounded-full border bg-white/30 px-4 py-1.5 text-sm font-medium text-black shadow-md backdrop-blur-lg transition hover:bg-white/60 dark:border-white dark:text-white dark:hover:bg-neutral-800"
         >
-          {/* Green pulse dot */}
+          {/* Blue pulse dot */}
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
           </span>
-          need an intern?
+          available for projects
         </button>
       </div>
 
@@ -132,24 +131,21 @@ export default function Home() {
         </div>
 
         <h2 className="text-secondary-foreground mt-1 text-xl font-semibold md:text-2xl">
-          Hey, I'm Raphael 👋
+          Hey, I'm Finley Howard 👋
         </h2>
         <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
-          AI portfolio
+          AI & Automation Specialist
         </h1>
+        <div className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl notranslate" translate="no">
+          <TypeWriter
+            text="I build intelligent systems that transform workflows, create engaging content, and solve complex problems through innovative automation and AI integration. Specialising in education and media with n8n, AI APIs, and creative solutions."
+            speed={25}
+            startDelay={1200}
+            onComplete={() => setDescriptionComplete(true)}
+            cursor={true}
+          />
+        </div>
       </motion.div>
-
-      {/* centre memoji */}
-      <div className="relative z-10 h-52 w-48 overflow-hidden sm:h-72 sm:w-72">
-        <Image
-          src="/landing-memojis.png"
-          alt="Hero memoji"
-          width={2000}
-          height={2000}
-          priority
-          className="translate-y-14 scale-[2] object-cover"
-        />
-      </div>
 
       {/* input + quick buttons */}
       <motion.div
@@ -172,7 +168,7 @@ export default function Home() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything…"
+              placeholder={placeholder}
               className="w-full border-none bg-transparent text-base text-neutral-800 placeholder:text-neutral-500 focus:outline-none dark:text-neutral-200 dark:placeholder:text-neutral-500"
             />
             <button
@@ -187,7 +183,7 @@ export default function Home() {
         </form>
 
         {/* quick-question grid */}
-        <div className="mt-4 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-5">
+        <div className="mt-4 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
           {questionConfig.map(({ key, color, icon: Icon }) => (
             <Button
               key={key}

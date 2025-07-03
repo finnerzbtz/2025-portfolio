@@ -8,75 +8,60 @@ import { Code, Cpu, PenTool, Users } from 'lucide-react';
 const Skills = () => {
   const skillsData = [
     {
-      category: 'Frontend Development',
-      icon: <Code className="h-5 w-5" />,
+      category: 'Vibe Coding & Automation',
+      icon: <Cpu className="h-5 w-5" />,
       skills: [
-        'HTML',
-        'CSS',
-        'JavaScript/TypeScript',
-        'Tailwind CSS',
-        'Bootstrap',
-        'Next.js',
-        'React',
-        'Vercel AI SDK',
-        'Gsap',
+        'n8n (No-Code/Low-Code Workflows)',
+        'Prompt Engineering',
+        'AI Content Pipelines',
+        'API Integrations',
+        'Automation Design',
+        'Workflow Hacking',
+        'Rapid Prototyping',
+        '“Vibe Coding” (Getting things working, fast!)',
       ],
       color: 'bg-blue-50 text-blue-600 border border-blue-200',
     },
     {
-      category: 'Backend & Systems',
+      category: 'AI & Content Tools',
       icon: <Cpu className="h-5 w-5" />,
       skills: [
-        'Unix',
-        'C',
-        'C++',
-        'Python',
-        'Typescript',
-        'Git',
-        'GitHub',
-        'Docker',
-        'GCP',
-        'PostgreSQL',
+        'OpenAI (GPT-4, Whisper, API)',
+        'Google Gemini',
+        'ElevenLabs (TTS)',
+        'MCP Video Tools',
+        'WordPress Automation',
+        'Google Sheets/Drive/Calendar',
+        'Telegram, TikTok, YouTube APIs',
+        'Data Scraping & Parsing',
       ],
       color: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
     },
     {
-      category: 'Design & Creative Tools',
+      category: 'Content & Media',
       icon: <PenTool className="h-5 w-5" />,
-      skills: ['Figma', 'Davinci Code', 'Illustrator', 'Canva', 'Keynote'],
+      skills: [
+        'Video Editing (CapCut, DaVinci Resolve)',
+        'Audio Production',
+        '360° Camera Workflows',
+        'Social Media Strategy',
+        'Content Automation',
+        'Creative Storytelling',
+      ],
       color: 'bg-indigo-50 text-indigo-600 border border-indigo-200',
     },
     {
       category: 'Soft Skills',
       icon: <Users className="h-5 w-5" />,
       skills: [
+        'Creative Problem-Solving',
+        'Workflow Design',
         'Communication',
-        'Problem-Solving',
-        'Adaptability',
+        'Teamwork & Collaboration',
         'Learning Agility',
-        'Teamwork',
-        'Creativity',
-        'Focus',
+        '“Vibe Coding” Mindset',
       ],
       color: 'bg-amber-50 text-amber-600 border border-amber-200',
-    },
-    {
-      category: 'AI & Fullstack Engineering',
-      icon: <Cpu className="h-5 w-5" />,
-      skills: [
-        'LLM Providers (ChatGPT, Whisper, Groq, Mistral & Claude)',
-        'AI Agents',
-        'Prompt engineering',
-        'Vector databases (Weaviate, Pinecone)',
-        'RAG (Retrieval-Augmented Generation)',
-        'Tool routing & calling',
-        'Hugging Face Transformers',
-        'Vercel AI SDK',
-        'Supabase',
-        'Prisma',
-        'Next.js',
-      ],
-      color: 'bg-purple-50 text-purple-600 border border-purple-200',
     },
   ];
 
@@ -96,7 +81,7 @@ const Skills = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: [0.19, 1, 0.22, 1] },
+      transition: { duration: 0.5 },
     },
   };
 
@@ -105,7 +90,7 @@ const Skills = () => {
     visible: {
       opacity: 1,
       scale: 1,
-      transition: { duration: 0.3, ease: 'easeOut' },
+      transition: { duration: 0.3 },
     },
   };
 
@@ -113,7 +98,7 @@ const Skills = () => {
     <motion.div
       initial={{ scale: 0.98, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
+              transition={{ duration: 0.6 }}
       className="mx-auto w-full max-w-5xl rounded-4xl"
     >
       <Card className="w-full border-none px-0 pb-12 shadow-none">

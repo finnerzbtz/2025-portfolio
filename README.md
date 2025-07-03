@@ -14,12 +14,12 @@ Ask a question — my AI avatar replies instantly.
 
 - 🧠 **Tech recruiter?** Ask about my stack & results  
 - 💻 **Dev?** Dive into my code & mindset  
-- 🧑‍🤝‍🧑 **Friend or family?** See what I’ve been working on  
+- 🧑‍🤝‍🧑 **Friend or family?** See what I've been working on  
 
 ---
 
 This is not a portfolio.  
-It’s a **conversation tailored to your curiosity**.
+It's a **conversation tailored to your curiosity**.
 
 ➡️ **Try it now:** [https://toukoum.fr](https://toukoum.fr)  
 *What will you ask?*

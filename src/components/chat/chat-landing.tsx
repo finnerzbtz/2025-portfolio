@@ -6,26 +6,27 @@ import React from 'react';
 
 interface ChatLandingProps {
   submitQuery: (query: string) => void;
+  showPresentationBackground?: boolean;
 }
 
-const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery }) => {
+const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery, showPresentationBackground = false }) => {
   // Suggested questions that the user can click on
   const suggestedQuestions = [
     {
       icon: <MessageSquare className="h-4 w-4" />,
-      text: 'Who are you?',
+      text: 'Who are you? Tell me about your background and experience.',
     },
     {
       icon: <Code className="h-4 w-4" />,
-      text: 'What projects have you worked on?',
+      text: 'What are your current projects? Show me your automation and AI work.',
     },
     {
       icon: <Award className="h-4 w-4" />,
-      text: 'What are your skills?',
+      text: 'What are your technical skills? Tell me about n8n, AI, and development.',
     },
     {
       icon: <Mail className="h-4 w-4" />,
-      text: 'How can I contact you?',
+      text: 'How can I contact you for collaboration or opportunities?',
     },
   ];
 
@@ -47,14 +48,13 @@ const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery }) => {
       y: 0,
       transition: {
         duration: 0.4,
-        ease: [0.25, 0.1, 0.25, 1],
       },
     },
   };
 
   return (
     <motion.div
-      className="flex w-full flex-col items-center px-4 py-6"
+      className={`flex w-full flex-col items-center px-4 py-6 ${showPresentationBackground ? 'bg-white/85 backdrop-blur-xl rounded-2xl shadow-sm border border-white/20 mx-4' : ''}`}
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -62,10 +62,10 @@ const ChatLanding: React.FC<ChatLandingProps> = ({ submitQuery }) => {
       {/* Welcome message */}
       <motion.div className="mb-8 text-center" variants={itemVariants}>
         <h2 className="mb-3 text-2xl font-semibold">
-            I'm Raphael's digital twin
+            Hey, I'm Finley's AI assistant
         </h2>
         <p className="text-muted-foreground mx-auto max-w-md">
-          The first portfolio that fit YOU needs.
+          Ask me anything about automation, AI, content creation, or collaboration opportunities.
         </p>
       </motion.div>
 

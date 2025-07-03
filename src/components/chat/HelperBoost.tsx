@@ -34,31 +34,32 @@ interface HelperBoostProps {
 }
 
 const questions = {
-  Me: 'Who are you? I want to know more about you.',
-  Projects: 'What are your projects? What are you working on right now?',
-  Skills: 'What are your skills? Give me a list of your soft and hard skills.',
-  Fun: "What the craziest thing you've ever done? (mb?) What are your hobbies? ",
-  Contact:
-    'How can I reach you? What kind of project would make you say "yes" immediately?',
+  Me: 'Who are you? Tell me about your background and experience.',
+  Projects: 'What are your current projects? Show me your automation and AI work.',
+  Skills: 'What are your technical skills? Tell me about n8n, AI, and development.',
+  Automation: 'What automation systems have you built? Show me your n8n workflows.',
+  Content: 'Tell me about your content creation work and viral videos.',
+  Contact: 'How can I contact you for collaboration or opportunities?',
 };
 
 const questionConfig = [
   { key: 'Me', color: '#329696', icon: Laugh },
   { key: 'Projects', color: '#3E9858', icon: BriefcaseBusiness },
   { key: 'Skills', color: '#856ED9', icon: Layers },
-  { key: 'Fun', color: '#B95F9D', icon: PartyPopper },
+  { key: 'Automation', color: '#FF6B6B', icon: Sparkles },
+  { key: 'Content', color: '#B95F9D', icon: PartyPopper },
   { key: 'Contact', color: '#C19433', icon: UserRoundSearch },
 ];
 
 // Helper drawer data
 const specialQuestions = [
-  'Mountain Bike you said?? Show me!',
+  'Tell me about your viral TikTok series Barz in Carz',
   'Who are you?',
   'Can I see your resume?',
-  'What projects are you most proud of?',
+  'What automation projects are you most proud of?',
   'What are your skills?',
   'How can I reach you?',
-  "What's the craziest thing you've ever done?",
+  'What content creation work have you done?',
 ];
 
 const questionsByCategory = [
@@ -69,7 +70,7 @@ const questionsByCategory = [
     questions: [
       'Who are you?',
       'What are your passions?',
-      'How did you get started in tech?',
+      'How did you get started in AI and automation?',
       'Where do you see yourself in 5 years?',
     ],
   },
@@ -82,33 +83,41 @@ const questionsByCategory = [
       'What makes you a valuable team member?',
       'Where are you working now?',
       'Why should I hire you?',
-      "What's your educational background?",
+      'Tell me about your role at The Wire Ltd',
     ],
   },
   {
     id: 'projects',
     name: 'Projects',
     icon: CodeIcon,
-    questions: ['What projects are you most proud of?'],
+    questions: [
+      'What automation projects are you most proud of?',
+      'Show me your n8n workflows',
+      'Tell me about the Wire Ltd event scraper',
+      'What AI projects have you built?'
+    ],
   },
   {
     id: 'skills',
     name: 'Skills',
     icon: GraduationCapIcon,
     questions: [
-      'What are your skills?',
-      'How was your experience at École 42?',
+      'What are your technical skills?',
+      'Tell me about your n8n expertise',
+      'What AI tools do you work with?',
+      'How do you approach automation projects?'
     ],
   },
   {
-    id: 'fun',
-    name: 'Fun',
+    id: 'content',
+    name: 'Content & Creative',
     icon: PartyPopper,
     questions: [
-      'Mountain Bike you said?? Show me!',
-      "What's the craziest thing you've ever done?",
-      'Mac or PC?',
-      'What are you certain about that 90% get wrong?',
+      'Tell me about your content creation work',
+      'What is Barz in Carz?',
+      'How do you create viral content?',
+      'Tell me about your music and creativity',
+      'What content automation workflows have you built?'
     ],
   },
   {
@@ -119,6 +128,7 @@ const questionsByCategory = [
       'How can I reach you?',
       "What kind of project would make you say 'yes' immediately?",
       'Where are you located?',
+      'Are you available for automation consulting?'
     ],
   },
 ];
@@ -209,7 +219,7 @@ export default function HelperBoost({
                     key={key}
                     onClick={() => handleQuestionClick(key)}
                     variant="outline"
-                    className="border-border hover:bg-border/30 h-auto min-w-[100px] flex-shrink-0 cursor-pointer rounded-xl border bg-white/80 px-4 py-3 shadow-none backdrop-blur-sm transition-none active:scale-95"
+                    className="border-border/50 hover:bg-border/20 h-auto min-w-[100px] flex-shrink-0 cursor-pointer rounded-2xl border bg-white/30 px-4 py-3 shadow-sm backdrop-blur-md transition-all duration-300 ease-in-out active:scale-95 hover:shadow-md"
                   >
                     <div className="flex items-center gap-3 text-gray-700">
                       <Icon size={18} strokeWidth={2} color={color} />
@@ -224,7 +234,7 @@ export default function HelperBoost({
                     <TooltipTrigger asChild>
                       <Drawer.Trigger className="group relative flex flex-shrink-0 items-center justify-center">
                         <motion.div
-                          className="hover:bg-border/30 flex h-auto cursor-pointer items-center space-x-1 rounded-xl border border-neutral-200 bg-white/80 px-4 py-3 text-sm backdrop-blur-sm transition-all duration-200 dark:border-neutral-800 dark:bg-neutral-900"
+                          className="hover:bg-border/20 flex h-auto cursor-pointer items-center space-x-1 rounded-2xl border border-neutral-200/50 bg-white/30 px-4 py-3 text-sm backdrop-blur-md transition-all duration-300 ease-in-out hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
                           whileHover={{ scale: 1 }}
                           whileTap={{ scale: 0.98 }}
                         >

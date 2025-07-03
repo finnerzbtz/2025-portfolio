@@ -154,3 +154,13 @@ pre {
   word-wrap: normal;
   overflow-x: auto;
 }
+
+/* Hide scrollbar while keeping functionality */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

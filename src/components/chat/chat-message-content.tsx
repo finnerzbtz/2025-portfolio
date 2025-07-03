@@ -9,7 +9,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, memo, useMemo } from 'react';
 
 export type ChatMessageContentProps = {
   message: Message;
@@ -20,18 +20,20 @@ export type ChatMessageContentProps = {
   skipToolRendering?: boolean;
 };
 
-const CodeBlock = ({ content }: { content: string }) => {
+const CodeBlock = memo(({ content }: { content: string }) => {
   const [isOpen, setIsOpen] = useState(true);
 
-  // Extract language if present in the first line
-  const firstLineBreak = content.indexOf('\n');
-  const firstLine = content.substring(0, firstLineBreak).trim();
-  const language = firstLine || 'text';
-  const code = firstLine ? content.substring(firstLineBreak + 1) : content;
-
-  // Get first few lines for preview
-  const previewLines = code.split('\n').slice(0, 1).join('\n');
-  const hasMoreLines = code.split('\n').length > 1;
+  // Memoize code processing
+  const { language, code, previewLines, hasMoreLines } = useMemo(() => {
+    const firstLineBreak = content.indexOf('\n');
+    const firstLine = content.substring(0, firstLineBreak).trim();
+    const language = firstLine || 'text';
+    const code = firstLine ? content.substring(firstLineBreak + 1) : content;
+    const previewLines = code.split('\n').slice(0, 1).join('\n');
+    const hasMoreLines = code.split('\n').length > 1;
+    
+    return { language, code, previewLines, hasMoreLines };
+  }, [content]);
 
   return (
     <Collapsible
@@ -69,64 +71,100 @@ const CodeBlock = ({ content }: { content: string }) => {
       </div>
     </Collapsible>
   );
+});
+
+CodeBlock.displayName = 'CodeBlock';
+
+// Memoized markdown components to prevent re-creation on every render
+const markdownComponents = {
+  p: ({ children }: any) => (
+    <p className="break-words whitespace-pre-wrap">
+      {children}
+    </p>
+  ),
+  ul: ({ children }: any) => (
+    <ul className="my-4 list-disc pl-6">{children}</ul>
+  ),
+  ol: ({ children }: any) => (
+    <ol className="my-4 list-decimal pl-6">{children}</ol>
+  ),
+  li: ({ children }: any) => <li className="my-1">{children}</li>,
+  a: ({ href, children }: any) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 hover:underline"
+    >
+      {children}
+    </a>
+  ),
 };
 
-export default function ChatMessageContent({
+// Simplified text content renderer - removed deferred value for immediate updates
+const TextContent = memo(({ content }: { content: string }) => {
+  return (
+    <div className="prose dark:prose-invert w-full">
+      <Markdown
+        remarkPlugins={[remarkGfm]}
+        components={markdownComponents}
+      >
+        {content}
+      </Markdown>
+    </div>
+  );
+});
+
+TextContent.displayName = 'TextContent';
+
+// Memoized content part renderer
+const ContentPart = memo(({ part, partIndex }: { part: any, partIndex: number }) => {
+  // Memoize content splitting to avoid recalculating on every render
+  const contentParts = useMemo(() => {
+    if (part.type !== 'text' || !part.text) return [];
+    return part.text.split('```');
+  }, [part.text, part.type]);
+
+  if (part.type !== 'text' || !part.text) return null;
+
+  return (
+    <div key={partIndex} className="w-full space-y-4">
+      {contentParts.map((content: string, i: number) =>
+        i % 2 === 0 ? (
+          // Regular text content
+          <TextContent key={`text-${i}`} content={content} />
+        ) : (
+          // Code block content
+          <CodeBlock key={`code-${i}`} content={content} />
+        )
+      )}
+    </div>
+  );
+});
+
+ContentPart.displayName = 'ContentPart';
+
+const ChatMessageContent = memo(function ChatMessageContent({
   message,
 }: ChatMessageContentProps) {
+  // Memoize the parts to avoid recalculating
+  const messageParts = useMemo(() => message.parts || [], [message.parts]);
+
   // Only handle text parts
   const renderContent = () => {
-    return message.parts?.map((part, partIndex) => {
-      if (part.type !== 'text' || !part.text) return null;
-
-      // Split content by code block markers
-      const contentParts = part.text.split('```');
-
-      return (
-        <div key={partIndex} className="w-full space-y-4">
-          {contentParts.map((content, i) =>
-            i % 2 === 0 ? (
-              // Regular text content
-              <div key={`text-${i}`} className="prose dark:prose-invert w-full">
-                <Markdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ children }) => (
-                      <p className="break-words whitespace-pre-wrap">
-                        {children}
-                      </p>
-                    ),
-                    ul: ({ children }) => (
-                      <ul className="my-4 list-disc pl-6">{children}</ul>
-                    ),
-                    ol: ({ children }) => (
-                      <ol className="my-4 list-decimal pl-6">{children}</ol>
-                    ),
-                    li: ({ children }) => <li className="my-1">{children}</li>,
-                    a: ({ href, children }) => (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        {children}
-                      </a>
-                    ),
-                  }}
-                >
-                  {content}
-                </Markdown>
-              </div>
-            ) : (
-              // Code block content
-              <CodeBlock key={`code-${i}`} content={content} />
-            )
-          )}
-        </div>
-      );
-    });
+    return messageParts.map((part, partIndex) => (
+      <ContentPart key={partIndex} part={part} partIndex={partIndex} />
+    ));
   };
 
   return <div className="w-full">{renderContent()}</div>;
-}
+}, (prevProps, nextProps) => {
+  // Less strict comparison to allow streaming updates
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.isLoading === nextProps.isLoading
+  );
+});
+
+export default ChatMessageContent;

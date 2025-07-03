@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  portfolio:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: finley-portfolio
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      # Mount public directory for video files (optional, for easier updates)
+      - ./public:/app/public:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - portfolio-network
+
+networks:
+  portfolio-network:
+    driver: bridge 
